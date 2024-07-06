@@ -38,4 +38,5 @@ async def create_book(book_request : BookRequest):
     all_books.append(new_book)
 
 
+
 ## {     "id": 77,     "author": "Bobby",     "title": "Arrakis",     "rating": 10  }
