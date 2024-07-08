@@ -1,8 +1,9 @@
 import enum
 from turtle import st
 from typing import Optional         ## For optional in validation
-from fastapi import Body, FastAPI, Path, Query
+from fastapi import Body, FastAPI, HTTPException, Path, Query
 from pydantic import BaseModel, Field
+from starlette import status
 
 app = FastAPI()
 
@@ -19,8 +20,8 @@ class BookRequest(BaseModel):   ## Inheriting from pydantic BaseModel
     # id: Optional[int] = None
     # id: Optional[int] = Field(description="ID is not needed on Create", default= None)
     id: int | None = None
-    author: str = Field(min_length=2)
-    title: str = Field(max_length=100)
+    author: str #= Field(min_length=2)
+    title: str #= Field(max_length=100)
     rating: int = Field(gt=-1,lt=11)
 
 all_books = [
@@ -36,7 +37,7 @@ all_books = [
 #         return "There are no books"
 #     return all_books
 
-@app.post("/create-book")
+@app.post("/create-book", status_code=status.HTTP_201_CREATED)
 async def create_book(book_request : BookRequest):
     # print(type(book_request))
     new_book = Book(**book_request.model_dump())
@@ -44,12 +45,13 @@ async def create_book(book_request : BookRequest):
     all_books.append(assignbookid(new_book))
 
 @app.get("/books/{book_id}")
-async def fetch_book_by_id(book_id:int = Path(gt=0,lt=1+len(all_books))):
+async def fetch_book_by_id(book_id:int = Path(gt=0,lt=10)):
     # if book_id < 1 or book_id > len(all_books):
     #     return "Book does not exist in current collection"
     for book in all_books:
         if book.id == book_id:
             return book
+    raise HTTPException(status_code=404, detail="Item not found")
 
 @app.get("/books/")
 async def fetch_books_by_rating(book_rating:int = Query(default=None, gt=0,lt=11)):
@@ -62,13 +64,14 @@ async def fetch_books_by_rating(book_rating:int = Query(default=None, gt=0,lt=11
                 rated.append(book)
         return rated
 
-@app.put("/books/update_book")
+@app.put("/books/update_book", status_code= status.HTTP_204_NO_CONTENT)
 async def update_book(book:BookRequest):
     for i,b in enumerate(all_books):
         if b.id == book.id:
-            all_books[i] = book 
+            all_books[i] = book   
+    raise HTTPException(status_code=404)  
 
-@app.delete("/books/{book_id}")
+@app.delete("/books/{book_id}", status_code = status.HTTP_204_NO_CONTENT)
 async def delete_book_by_id(book_id:int =   Path(gt=0,lt=1+len(all_books))):
     ## Will not update other IDs after popping though
     for i, book in enumerate(all_books):
