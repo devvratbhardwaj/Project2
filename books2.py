@@ -1,6 +1,6 @@
 from turtle import st
 from fastapi import Body, FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -12,10 +12,10 @@ class Book:
         self.rating = rating
     
 class BookRequest(BaseModel):   ## Inheriting from pydantic BaseModel
-    id: int
-    author: str
-    title: str
-    rating: int
+    id: int = Field(gt=-1, lt=20)
+    author: str = Field(min_length=2)
+    title: str = Field(max_length=100)
+    rating: int = Field(gt=-1,lt=11)
 
 all_books = [
     Book(1, "David", "Winning and Losing", 7),
